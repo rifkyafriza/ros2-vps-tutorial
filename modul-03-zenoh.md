@@ -39,12 +39,12 @@ PC Robot (ROS2)                  VPS Ubuntu 24.04
 **Step 1: Download binary Zenoh Bridge di VPS**
 Buka terminal SSH VPS Anda. Kita hanya akan men-download file *executable* pre-compiled.
 ```bash
-# Download rilis zenoh-bridge-ros2dds (Contoh v1.0.3 atau terbaru)
-wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.0.3/zenoh-plugin-ros2dds-1.0.3-x86_64-unknown-linux-gnu-standalone.zip
+# Download rilis zenoh-bridge-ros2dds (Contoh v1.9.0 atau terbaru)
+wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.9.0/zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
 
 # Unzip file
 sudo apt install unzip
-unzip zenoh-plugin-ros2dds-1.0.3-x86_64-unknown-linux-gnu-standalone.zip
+unzip zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
 
 # Berikan izin eksekusi
 chmod +x zenoh-bridge-ros2dds
@@ -71,8 +71,8 @@ Biarkan terminal ini terbuka. VPS sudah siap menerima koneksi Zenoh.
 **Step 4: Download binary Zenoh Bridge di PC Lokal**
 Sama seperti di VPS, buka terminal di Ubuntu PC lokal Anda dan download binary-nya:
 ```bash
-wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.0.3/zenoh-plugin-ros2dds-1.0.3-x86_64-unknown-linux-gnu-standalone.zip
-unzip zenoh-plugin-ros2dds-1.0.3-x86_64-unknown-linux-gnu-standalone.zip
+wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.9.0/zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
+unzip zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
 chmod +x zenoh-bridge-ros2dds
 ```
 
