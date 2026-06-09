@@ -1,0 +1,12 @@
+{
+  // Zenoh client config — dijalankan di PC lokal
+  mode: "client",
+  connect: {
+    endpoints: ["tcp/<VPS_PUBLIC_IP>:7447"]  // Ganti dengan IP publik VPS kamu
+  },
+  scouting: {
+    multicast: {
+      enabled: false
+    }
+  }
+}

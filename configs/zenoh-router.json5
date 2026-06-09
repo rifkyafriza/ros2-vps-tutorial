@@ -1,0 +1,12 @@
+{
+  // Zenoh router config — dijalankan di VPS
+  mode: "router",
+  listen: {
+    endpoints: ["tcp/0.0.0.0:7447"]
+  },
+  scouting: {
+    multicast: {
+      enabled: false  // Disable multicast — kita pakai unicast via TCP
+    }
+  }
+}

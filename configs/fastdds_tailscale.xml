@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- FastDDS profile for Tailscale VPN connection -->
+<!-- Replace 100.x.y.z with your VPS Tailscale IP (run: tailscale ip -4) -->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <participant profile_name="TailscaleProfile" is_default_profile="true">
+    <rtps>
+      <builtin>
+        <initialPeersList>
+          <locator>
+            <udpv4>
+              <address>100.x.y.z</address>  <!-- VPS Tailscale IP -->
+            </udpv4>
+          </locator>
+        </initialPeersList>
+        <metatrafficUnicastLocatorList>
+          <locator>
+            <udpv4>
+              <address>100.a.b.c</address>  <!-- PC Lokal Tailscale IP -->
+              <port>7412</port>
+            </udpv4>
+          </locator>
+        </metatrafficUnicastLocatorList>
+      </builtin>
+    </rtps>
+  </participant>
+</profiles>

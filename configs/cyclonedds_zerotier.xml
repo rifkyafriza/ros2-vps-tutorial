@@ -1,0 +1,13 @@
+<CycloneDDS>
+  <Domain>
+    <General>
+      <!-- Replace with ZeroTier interface IP -->
+      <NetworkInterfaceAddress>10.x.x.x</NetworkInterfaceAddress>
+    </General>
+    <Discovery>
+      <Peers>
+        <Peer address="10.x.x.y"/>  <!-- Peer VPS ZeroTier IP -->
+      </Peers>
+    </Discovery>
+  </Domain>
+</CycloneDDS>

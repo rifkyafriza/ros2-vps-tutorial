@@ -1,0 +1,14 @@
+mqtt_client:
+  ros__parameters:
+    broker:
+      host: "<VPS_PUBLIC_IP>"
+      port: 1883
+    bridge:
+      # Dari ROS2 ke MQTT (publish dari robot ke VPS)
+      ros2_to_mqtt:
+        - ros_topic: "/chatter"
+          mqtt_topic: "robot/chatter"
+      # Dari MQTT ke ROS2 (subscribe dari VPS untuk dikirim ke robot)
+      mqtt_to_ros2:
+        - mqtt_topic: "robot/cmd_vel"
+          ros_topic: "/cmd_vel"
