@@ -5,10 +5,12 @@ mqtt_client:
       port: 1883
     bridge:
       # Dari ROS2 ke MQTT (publish dari robot ke VPS)
-      ros2_to_mqtt:
+      ros2mqtt:
         - ros_topic: "/chatter"
           mqtt_topic: "robot/chatter"
+          primitive: true
       # Dari MQTT ke ROS2 (subscribe dari VPS untuk dikirim ke robot)
-      mqtt_to_ros2:
+      mqtt2ros:
         - mqtt_topic: "robot/cmd_vel"
           ros_topic: "/cmd_vel"
+          primitive: true

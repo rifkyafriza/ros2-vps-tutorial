@@ -1,15 +1,14 @@
 # ddsrouter.yaml — Konfigurasi VPS eProsima DDS Router
-version: v3.0
+version: v4.0
 
-# TCP WAN Participant untuk mendengarkan koneksi dari PC (Client)
+# WAN Participant untuk mendengarkan koneksi TCP dari PC (Client)
 participants:
   - name: WanParticipant
-    kind: local
-    domain: 0
-    transport: tcp
-    listening_addresses:
-      - ip: 0.0.0.0
+    kind: wan
+    listening-addresses:
+      - ip: "<VPS_PUBLIC_IP>"
         port: 11811
+        transport: tcp
 
   - name: LocalParticipant
     kind: local

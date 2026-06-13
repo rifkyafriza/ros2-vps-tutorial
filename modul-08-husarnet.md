@@ -48,7 +48,7 @@ Lakukan langkah ini baik di **PC Lokal** maupun di **VPS**.
 **Step 2: Install Husarnet**
 Jalankan perintah instalasi otomatis di terminal:
 ```bash
-curl https://install.husarnet.com | sudo bash
+curl https://install.husarnet.com/install.sh | sudo bash
 ```
 
 **Step 3: Gabung ke Jaringan (Join)**

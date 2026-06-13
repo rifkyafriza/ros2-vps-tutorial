@@ -94,13 +94,15 @@ mqtt_client:
       port: 1883
     bridge:
       # Dari ROS2 ke MQTT (publish dari robot ke VPS)
-      ros2_to_mqtt:
+      ros2mqtt:
         - ros_topic: "/chatter"
           mqtt_topic: "robot/chatter"
+          primitive: true
       # Dari MQTT ke ROS2 (subscribe dari VPS untuk dikirim ke robot)
-      mqtt_to_ros2:
+      mqtt2ros:
         - mqtt_topic: "robot/cmd_vel"
           ros_topic: "/cmd_vel"
+          primitive: true
 ```
 *Jangan lupa ubah `<VPS_PUBLIC_IP>` menjadi IP VPS Anda sesungguhnya.*
 
@@ -125,7 +127,10 @@ Sekarang, buka terminal di VPS (atau gunakan aplikasi MQTT Explorer di laptop An
 ```bash
 mosquitto_sub -h localhost -t "robot/chatter" -v
 ```
-Anda akan melihat string JSON mentah yang berisi data pesan `"Hello World: X"`.
+Anda akan melihat data pesan `"Hello World: X"` yang dikirimkan dalam format teks (karena opsi `primitive: true` di konfigurasi YAML).
+
+> [!NOTE]
+> Tanpa opsi `primitive: true`, `mqtt_client` mengirim data dalam format binary (serialized ROS message), bukan JSON. Opsi `primitive: true` memastikan data dikirim sebagai string yang bisa dibaca langsung oleh `mosquitto_sub` atau aplikasi MQTT lainnya.
 
 **Step 8: Kirim Perintah dari MQTT ke ROS2**
 Biarkan MQTT Bridge tetap berjalan di PC Lokal. Buka terminal baru di PC Lokal, dan pantau topik ROS2 `/cmd_vel`:

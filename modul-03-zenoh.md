@@ -39,16 +39,20 @@ PC Robot (ROS2)                  VPS Ubuntu 24.04
 **Step 1: Download binary Zenoh Bridge di VPS**
 Buka terminal SSH VPS Anda. Kita hanya akan men-download file *executable* pre-compiled.
 ```bash
-# Download rilis zenoh-bridge-ros2dds (Contoh v1.9.0 atau terbaru)
-wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.9.0/zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
-
-# Unzip file
-sudo apt install unzip
-unzip zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
-
-# Berikan izin eksekusi
-chmod +x zenoh-bridge-ros2dds
+# Metode 1 (Rekomendasi): Install dari repositori Debian Eclipse Zenoh
+echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list > /dev/null
+sudo apt update
+sudo apt install zenoh-bridge-ros2dds
 ```
+
+> [!TIP]
+> Alternatif: Download binary manual dari [GitHub Releases](https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases):
+> ```bash
+> wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.9.0/zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
+> sudo apt install unzip
+> unzip zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
+> chmod +x zenoh-bridge-ros2dds
+> ```
 
 **Step 2: Buka port 7447 di VPS**
 Zenoh secara default berkomunikasi menggunakan port `7447` TCP. Buka port tersebut:
@@ -69,8 +73,12 @@ Biarkan terminal ini terbuka. VPS sudah siap menerima koneksi Zenoh.
 ### Bagian B: Setup Zenoh Bridge di PC Robot (20 menit)
 
 **Step 4: Download binary Zenoh Bridge di PC Lokal**
-Sama seperti di VPS, buka terminal di Ubuntu PC lokal Anda dan download binary-nya:
+Sama seperti di VPS, buka terminal di Ubuntu PC lokal Anda dan install bridge:
 ```bash
+# Metode 1 (jika sudah ditambahkan repo Eclipse Zenoh):
+sudo apt install zenoh-bridge-ros2dds
+
+# Metode 2 (download manual):
 wget https://github.com/eclipse-zenoh/zenoh-plugin-ros2dds/releases/download/1.9.0/zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
 unzip zenoh-plugin-ros2dds-1.9.0-x86_64-unknown-linux-gnu-standalone.zip
 chmod +x zenoh-bridge-ros2dds
@@ -110,18 +118,17 @@ import time
 
 print("Menghubungkan ke Zenoh router lokal...")
 # Connect ke router Zenoh yang jalan di localhost VPS
-session = zenoh.open(zenoh.Config())
+with zenoh.open(zenoh.Config()) as session:
 
-def listener(sample):
-    print(f">> Menerima payload di topic: {sample.key_expr}")
-    print(f"   Isi (bytes): {sample.payload}")
+    def listener(sample):
+        print(f">> Menerima payload di topic: {sample.key_expr}")
+        print(f"   Isi (bytes): {sample.payload.to_bytes()}")
 
-# Subscribe ke namespace ROS2 via Zenoh
-print("Mendengarkan topic rt/chatter ...")
-sub = session.declare_subscriber("rt/chatter", listener)
+    # Subscribe ke namespace ROS2 via Zenoh
+    print("Mendengarkan topic rt/chatter ...")
+    sub = session.declare_subscriber("rt/chatter", listener)
 
-time.sleep(60)
-session.close()
+    time.sleep(60)
 ```
 
 Jalankan skrip:

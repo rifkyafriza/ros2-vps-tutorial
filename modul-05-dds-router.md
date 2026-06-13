@@ -33,32 +33,57 @@ PC Robot (ROS2 LAN)              VPS Ubuntu 24.04
 
 ### Bagian A: Instalasi dan Setup DDS Router di VPS (15 menit)
 
-**Step 1: Install DDS Router**
-Di terminal VPS Anda, kita bisa menginstall DDS Router dari repositori paket eProsima atau merakitnya (compile). Untuk kemudahan, kita anggap paket `ddsrouter` sudah terinstall (contoh via docker atau apt). Jika menggunakan docker:
+**Step 1: Install DDS Router (via Docker)**
+Image resmi eProsima DDS Router tidak tersedia di DockerHub untuk di-pull langsung. Anda harus mengunduhnya dari website eProsima.
+
+1. Buka halaman [eProsima Downloads](https://www.eprosima.com/index.php/downloads-all) di browser PC Anda.
+2. Unduh file Docker image DDS Router (misalnya versi `ubuntu-ddsrouter v3.5.1.tar`).
+3. Upload file `.tar` tersebut ke VPS Anda (bisa menggunakan `scp`, SFTP, atau aplikasi seperti FileZilla).
+4. Di terminal VPS, install Docker dan load image tersebut:
 ```bash
 sudo apt update
-sudo apt install docker.io
+sudo apt install -y docker.io
+
+# Load image ke Docker (sesuaikan nama file dengan versi yang Anda unduh)
+sudo docker load -i "ubuntu-ddsrouter v3.5.1.tar"
 ```
+
+> [!TIP]
+> **Alternatif: Build dari Source Code (Tanpa Docker)**
+> Jika VPS Anda tidak bisa/tidak boleh diinstal Docker, Anda bisa melakukan kompilasi native mengikuti [Developer Manual eProsima](https://eprosima-dds-router.readthedocs.io/en/latest/rst/developer_manual/installation/sources/linux.html). Langkahnya kira-kira sebagai berikut:
+> ```bash
+> sudo apt install -y cmake g++ pip wget git libasio-dev libtinyxml2-dev libssl-dev libyaml-cpp-dev
+> pip3 install -U colcon-common-extensions vcstool
+> 
+> mkdir -p ~/DDS-Router/src && cd ~/DDS-Router
+> wget https://raw.githubusercontent.com/eProsima/DDS-Router/main/ddsrouter.repos
+> vcs import src < ddsrouter.repos
+> colcon build
+> 
+> # Cara menjalankannya nanti:
+> source ~/DDS-Router/install/setup.bash
+> ddsrouter -c /path/to/ddsrouter.yaml
+> ```
 
 **Step 2: Menyiapkan Konfigurasi DDS Router**
 Siapkan file konfigurasi bernama `ddsrouter.yaml` di VPS Anda. File ini sudah tersedia di dalam folder `configs/ddsrouter.yaml` pada repositori tutorial ini, sehingga Anda cukup menyalinnya. Isinya adalah sebagai berikut:
 ```yaml
 # ddsrouter.yaml
-version: v3.0
+version: v4.0
 
 participants:
   - name: WanParticipant
-    kind: local
-    domain: 0
-    transport: tcp
-    listening_addresses:
-      - ip: 0.0.0.0
+    kind: wan
+    listening-addresses:
+      - ip: <VPS_PUBLIC_IP>
         port: 11811
+        transport: tcp
 
   - name: LocalParticipant
     kind: local
     domain: 1
 ```
+*Pastikan Anda mengganti `<VPS_PUBLIC_IP>` dengan IP Publik asli VPS Anda, karena DDS Router TCP Server perlu mengetahui IP mana yang diekspos ke internet.*
 
 **Step 3: Buka Port di Firewall VPS**
 Pastikan port 11811 TCP sudah terbuka:
@@ -67,56 +92,57 @@ sudo ufw allow 11811/tcp
 ```
 
 **Step 4: Jalankan DDS Router**
-Jalankan router di VPS menggunakan docker (atau aplikasinya langsung jika terinstall native):
+Jalankan DDS Router di VPS menggunakan Docker:
 ```bash
-docker run -it --rm --network host \
-  -v $(pwd)/ddsrouter.yaml:/ddsrouter.yaml \
-  eprosima/dds-router:latest \
-  -c /ddsrouter.yaml
+sudo docker run -it --rm --net=host \
+  -v $(pwd)/ddsrouter.yaml:/root/DDS_ROUTER_CONFIGURATION.yaml \
+  ubuntu-ddsrouter:v3.5.1
 ```
+*(Sesuaikan tag `v3.5.1` dengan versi yang Anda load sebelumnya. Pastikan file `ddsrouter.yaml` berada di direktori saat ini `$(pwd)` karena path harus absolut.)*
+
 DDS router sekarang hidup dan mendengarkan koneksi WAN dari PC lokal.
 
 ---
 
 ### Bagian B: Konfigurasi PC Lokal (20 menit)
 
-Di PC lokal, kita perlu memaksa FastDDS menggunakan profil TCP Client untuk terhubung ke IP publik VPS di port 11811.
+Sesuai dengan panduan arsitektur eProsima WAN TCP, komunikasi antara dua jaringan (VPS dan Lokal) dijembatani oleh **dua DDS Router**: satu sebagai Server (yang baru saja kita jalankan di VPS), dan satu lagi sebagai Client di PC lokal Anda.
 
-**Step 5: Buat File XML FastDDS di PC**
-Buat file `ddsrouter_client.xml` di PC lokal:
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
-    <participant profile_name="TCP_WAN_Client" is_default_profile="true">
-        <rtps>
-            <builtin>
-                <initialPeersList>
-                    <locator>
-                        <tcpv4>
-                            <address><VPS_PUBLIC_IP></address>
-                            <port>11811</port>
-                        </tcpv4>
-                    </locator>
-                </initialPeersList>
-            </builtin>
-        </rtps>
-    </participant>
-</profiles>
+**Step 5: Buat File ddsrouter_client.yaml di PC**
+Buat file `ddsrouter_client.yaml` di PC lokal Anda. File ini akan membuat PC Anda bertindak sebagai TCP Client yang melakukan koneksi ke VPS:
+```yaml
+# ddsrouter_client.yaml
+version: v4.0
+
+participants:
+  - name: WanParticipantClient
+    kind: wan
+    connection-addresses:
+      - ip: <VPS_PUBLIC_IP>
+        port: 11811
+        transport: tcp
+
+  - name: LocalParticipant
+    kind: local
+    domain: 0   # Mengikuti domain default ROS2 di PC Anda
 ```
 *Pastikan Anda mengganti `<VPS_PUBLIC_IP>` dengan IP asli VPS Anda!*
 
-**Step 6: Set Environment Variable di PC**
-Sama seperti pada Modul 1, beritahu ROS2 untuk memakai file XML ini:
+**Step 6: Jalankan DDS Router Client di PC**
+Sama seperti pada VPS, jalankan DDS Router di PC lokal Anda menggunakan Docker:
 ```bash
-export FASTRTPS_DEFAULT_PROFILES_FILE=$(pwd)/ddsrouter_client.xml
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+sudo docker run -it --rm --net=host \
+  -v $(pwd)/ddsrouter_client.yaml:/root/DDS_ROUTER_CONFIGURATION.yaml \
+  ubuntu-ddsrouter:v3.5.1
 ```
+*(Asumsinya Anda juga sudah mengunduh dan me-load Docker image `.tar` eProsima di PC lokal. Jika belum, ulangi Step 1 di PC Anda).*
 
 **Step 7: Jalankan Node ROS2**
-Jalankan node talker di terminal PC:
+Buka terminal baru di PC (biarkan DDS Router Client berjalan), lalu jalankan node ROS 2 standar tanpa perlu konfigurasi XML tambahan:
 ```bash
 ros2 run demo_nodes_cpp talker
 ```
+Karena node `talker` menggunakan `domain: 0` (default) dan DDS Router Client juga memiliki partisipan lokal di `domain: 0`, pesan akan otomatis ditangkap oleh DDS Router dan diteruskan via TCP ke DDS Router Server di VPS.
 
 ---
 
@@ -125,7 +151,7 @@ ros2 run demo_nodes_cpp talker
 Data `/chatter` sekarang sudah menyeberang ke VPS, di-routing oleh DDS Router dan diteruskan ke domain 1.
 
 **Step 8: Cek di VPS**
-Buka terminal baru di VPS (biarkan DDS router tetap jalan). Karena DDS router me-rutekan pesan ke `domain: 1` (lihat config yaml), maka kita harus melakukan echo di domain 1:
+Buka terminal baru di VPS (biarkan DDS router tetap jalan). Karena DDS router me-rutekan pesan ke `domain: 1` (lihat config yaml — peserta `LocalParticipant` berada di domain 1), maka kita harus melakukan echo di domain 1:
 ```bash
 export ROS_DOMAIN_ID=1
 source /opt/ros/jazzy/setup.bash
