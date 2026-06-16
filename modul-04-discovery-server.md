@@ -102,6 +102,111 @@ Koneksi ROS2 Anda sekarang terhubung via WAN tanpa VPN, murni menggunakan infras
 
 ---
 
+### Bagian D: Alternatif - Konfigurasi TCP over WAN menggunakan XML (Advanced)
+
+Jika Anda berada di jaringan WAN yang sangat ketat (misalnya memblokir UDP) atau Anda ingin memastikan **seluruh** komunikasi (discovery maupun pesan data) menggunakan TCP, metode environment variable `ROS_DISCOVERY_SERVER` saja mungkin tidak cukup. Sebagai alternatif, Anda dapat menggunakan file konfigurasi XML bawaan FastDDS.
+
+Metode ini mewajibkan kita mendefinisikan *transport descriptor* secara eksplisit menjadi `TCPv4` dan memasukkan alamat WAN (`wan_addr`).
+
+**Step 1: Buat XML Server di VPS (`server_profile.xml`)**
+Buat file `server_profile.xml` di VPS. Ganti `IP_PUBLIK_VPS` dengan IP Publik VPS Anda.
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>TCP_ds_transport</transport_id>
+            <type>TCPv4</type>
+            <listening_ports><port>11811</port></listening_ports>
+            <wan_addr>IP_PUBLIK_VPS</wan_addr>
+        </transport_descriptor>
+    </transport_descriptors>
+
+    <participant profile_name="TCP_discovery_server_profile" is_default_profile="true">
+        <rtps>
+            <userTransports><transport_id>TCP_ds_transport</transport_id></userTransports>
+            <useBuiltinTransports>false</useBuiltinTransports>
+            <prefix>44.53.00.5f.45.50.52.4f.53.49.4d.41</prefix>
+            <builtin>
+                <discovery_config>
+                    <discoveryProtocol>SERVER</discoveryProtocol>
+                </discovery_config>
+                <metatrafficUnicastLocatorList>
+                    <locator>
+                        <tcpv4>
+                            <address>IP_PUBLIK_VPS</address>
+                            <port>11811</port>
+                            <physical_port>11811</physical_port>
+                        </tcpv4>
+                    </locator>
+                </metatrafficUnicastLocatorList>
+            </builtin>
+        </rtps>
+    </participant>
+</profiles>
+```
+
+**Step 2: Buat XML Client di PC (`client_profile.xml`)**
+Di PC Lokal, buat `client_profile.xml`. Ganti `IP_PUBLIK_VPS` dengan IP VPS Anda. Port listening klien harus berbeda dengan server, contoh `11812`.
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>TCP_client_transport</transport_id>
+            <type>TCPv4</type>
+            <listening_ports><port>11812</port></listening_ports>
+        </transport_descriptor>
+    </transport_descriptors>
+
+    <participant profile_name="TCP_client_profile" is_default_profile="true">
+        <rtps>
+            <userTransports><transport_id>TCP_client_transport</transport_id></userTransports>
+            <useBuiltinTransports>false</useBuiltinTransports>
+            <builtin>
+                <discovery_config>
+                    <discoveryProtocol>CLIENT</discoveryProtocol>
+                    <discoveryServersList>
+                        <RemoteServer prefix="44.53.00.5f.45.50.52.4f.53.49.4d.41">
+                            <metatrafficUnicastLocatorList>
+                                <locator>
+                                    <tcpv4>
+                                        <address>IP_PUBLIK_VPS</address>
+                                        <port>11811</port>
+                                        <physical_port>11811</physical_port>
+                                    </tcpv4>
+                                </locator>
+                            </metatrafficUnicastLocatorList>
+                        </RemoteServer>
+                    </discoveryServersList>
+                </discovery_config>
+            </builtin>
+        </rtps>
+    </participant>
+</profiles>
+```
+
+**Step 3: Jalankan menggunakan Environment Variable XML**
+Sebagai pengganti environment `ROS_DISCOVERY_SERVER`, kita gunakan `FASTRTPS_DEFAULT_PROFILES_FILE` agar ROS2 meload file XML tersebut.
+
+*Di VPS (sebagai Server / node Dummy):*
+```bash
+export FASTRTPS_DEFAULT_PROFILES_FILE=$(pwd)/server_profile.xml
+ros2 run demo_nodes_cpp listener
+```
+
+*Di PC Lokal (sebagai Client):*
+```bash
+export FASTRTPS_DEFAULT_PROFILES_FILE=$(pwd)/client_profile.xml
+ros2 run demo_nodes_cpp talker
+```
+
+*(Referensi: [TCP over WAN with Discovery Server](https://docs.vulcanexus.org/en/jazzy/rst/tutorials/core/deployment/ds_wan_tcp/ds_wan_tcp.html))*
+
+---
+
 ## Latihan Mandiri
 1. Buat arsitektur Multi-Server! Jalankan server ID 0 di VPS, dan server ID 1 di PC Lokal (port berbeda). Hubungkan keduanya.
 2. Coba jalankan perintah `ros2 topic list` di terminal baru di PC Anda. Mengapa daftar topic kosong? (Petunjuk: ROS2 CLI juga bertindak sebagai node yang harus mengetahui keberadaan Discovery Server).
