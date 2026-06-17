@@ -64,7 +64,7 @@ sudo ufw allow 7447/tcp
 **Step 3: Jalankan Zenoh Router di VPS**
 Jalankan program bridge dalam mode `router` dan minta ia mendengarkan (listen) di semua antarmuka jaringan:
 ```bash
-./zenoh-bridge-ros2dds --mode router --listen tcp/0.0.0.0:7447
+./zenoh-bridge-ros2dds router --listen tcp/0.0.0.0:7447
 ```
 Biarkan terminal ini terbuka. VPS sudah siap menerima koneksi Zenoh.
 
@@ -87,7 +87,7 @@ chmod +x zenoh-bridge-ros2dds
 **Step 5: Jalankan Zenoh Bridge di PC**
 Ganti `<VPS_PUBLIC_IP>` dengan IP Publik dari VPS Anda. Jalankan bridge dalam mode `peer` (atau client) agar terhubung ke router di VPS:
 ```bash
-./zenoh-bridge-ros2dds --mode peer --connect tcp/<VPS_PUBLIC_IP>:7447
+./zenoh-bridge-ros2dds peer --connect tcp/<VPS_PUBLIC_IP>:7447
 ```
 
 **Step 6: Jalankan Node ROS2 Secara Normal**
