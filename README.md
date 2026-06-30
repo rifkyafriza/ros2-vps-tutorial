@@ -6,6 +6,7 @@ Panduan ini mengajarkan cara menghubungkan node ROS2 yang berjalan di PC lokal k
 - VPS Ubuntu 24.04 dengan IP publik (sudah dimiliki mahasiswa)
 - ROS2 Jazzy terinstall di PC lokal
 - Akun Tailscale gratis (untuk Modul 1)
+- Akun Google / Firebase gratis (untuk Modul 9)
 - Pemahaman dasar ROS2 topic, node, publisher, subscriber
 
 ## Modul
@@ -19,10 +20,11 @@ Panduan ini mengajarkan cara menghubungkan node ROS2 yang berjalan di PC lokal k
 | 6 | [Integrasi MQTT Broker untuk IoT](modul-06-mqtt-bridge.md) | MQTT Pub/Sub Bridge | Mudah |
 | 7 | [Micro-ROS Agent untuk ESP32](modul-07-microros-agent.md) | UDP over Public IP | Menengah |
 | 8 | [Husarnet P2P VPN (Robot-Specific)](modul-08-husarnet.md) | IPv6 Multicast P2P | Menengah |
+| 9 | [Firebase Realtime Database untuk Cloud Robotics](modul-firebase-rtdb.md) | Cloud state sync + Security Rules | Menengah |
 
 ## Arsitektur Sistem
 
-`[PC Lokal: ROS2 Node] ←→ [Jaringan / VPN / TCP] ←→ [VPS: ROS2/Bridge/Router] ←→ [Dashboard / Cloud]`
+`[PC Lokal: ROS2 Node] ←→ [Jaringan / VPN / TCP] ←→ [VPS: ROS2/Bridge/Router] ←→ [Dashboard / Cloud / Firebase]`
 
 ---
 *Dibuat untuk Mata Kuliah RE405 Cloud Robotics.*
